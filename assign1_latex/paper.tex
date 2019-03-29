@@ -5,6 +5,7 @@
 \usepackage{lmodern}
 \usepackage{amsmath}
 \usepackage{geometry}
+\usepackage{hyperref}
 \usepackage{subfigure}
 \usepackage{graphicx}
 \geometry{
@@ -84,7 +85,10 @@ Degrees & Readings \\ \hline
 \end{table}
 
 \section{Calibration} \label{sec:cal}
-Our readings after running the given example code on the haptic device can be seen in Table~\ref{table:readings}. We also plotted these readings in Figure~\ref{fig:readings_plot}. As expected a linear function emerged from our readings. To note is that the values for 50 and -50 degrees are slightly off curve, since the readings occurred a little before \& after 50 degrees, since the haptik device doesn’t quite reach the 50 mark.
+Our readings after running the given example code on the haptic device can be seen in Table~\ref{table:readings}. We also plotted these readings in Figure~\ref{fig:readings_plot}. The plot was created with: \\
+\url{https://www.socscistatistics.com/tests/regression/default.aspx}
+
+As expected a linear function emerged from our readings. To note is that the values for 50 and -50 degrees are slightly off curve, since the readings occurred a little before \& after 50 degrees, since the haptik device doesn’t quite reach the 50 mark.
 
 We took our results and calculated values for a and b of the regression equation
 \begin{equation*}
