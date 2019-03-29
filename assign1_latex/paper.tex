@@ -86,6 +86,7 @@ Degrees & Readings \\ \hline
 
 \section{Calibration} \label{sec:cal}
 Our readings after running the given example code on the haptic device can be seen in Table~\ref{table:readings}. We also plotted these readings in Figure~\ref{fig:readings_plot}. The plot was created with: \\
+Linear Regression Calculator. (2019, March 29). Retrieved from 
 \url{https://www.socscistatistics.com/tests/regression/default.aspx}
 
 As expected a linear function emerged from our readings. To note is that the values for 50 and -50 degrees are slightly off curve, since the readings occurred a little before \& after 50 degrees, since the haptik device doesn’t quite reach the 50 mark.
@@ -95,11 +96,14 @@ We took our results and calculated values for a and b of the regression equation
 X_m = a * update_{pos} + b
 \end{equation*}
 
-We found the values: $a = -3.97074$ and $b = 0.01197$. Using these values we can calculate degrees based on the readings of the haptic device.
+We found the values: $a = -3.97074$ and $b = 0.01197$. Since our intial values are sometimes different we tried to calibrate the b value depending on the initial state of the haptic device. Using these values we can calculate degrees based on the readings of the haptic device.
 
 \begin{equation*}
 degrees = a * reading + b
 \end{equation*}
+
+\vspace{1cm}
+
 
 With those degrees we can further calculate the distance in radians of the position $X_m$ in milimetres.
 
