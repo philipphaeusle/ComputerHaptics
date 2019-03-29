@@ -4,10 +4,21 @@
     DECLARATION
 */
 
+//calibration
+//specific device numbers for the sensor
+
+bool with_calibration = false;
+
+
+//double a=0.01165;
+double a=0.01197;
+double b= with_calibration ? 0.000 : 3.9;
+  
 // Pin
 int pwmPin = 5; // PWM output pin for motor
 int dirPin = 8; // direction output pin for motor
 int sensorPosPin = A2; // input pin for MR sensor
+int buttonPin = 13;
 
 // position tracking
 
@@ -39,6 +50,8 @@ double Tp = 0;              // torque of the motor pulley
 double duty = 0;            // duty cylce (between 0 and 255)
 unsigned int output = 0;    // output command to the motor
 
+//buttonData
+bool buttonOn = false;
 
 /*
       Setup function - this function run once when reset button is pressed.
@@ -50,10 +63,12 @@ void setup() {
 
   // Input pins
   pinMode(sensorPosPin, INPUT); // set MR sensor pin to be an input
+  pinMode(buttonPin ,INPUT); //set buttonPin to be an input
 
   // Output pins
   pinMode(pwmPin, OUTPUT);  // PWM pin for motor
   pinMode(dirPin, OUTPUT);  // dir pin for motor
+ 
 
   // Initialize motor
   analogWrite(pwmPin, 0);     // set to not be spinning (0/255)
@@ -62,12 +77,58 @@ void setup() {
   // Initialize position valiables
   lastLastRawPos = analogRead(sensorPosPin);
   lastRawPos = analogRead(sensorPosPin);
+
+    Serial.println("I received: ");
+
+   if(with_calibration){
+     updateRawPos();
+     double angle=a*updatedPos+b;
+     Serial.println(b);
+     b = -1.0 *angle;
+     Serial.println(b);
+   }   
 }
+
+void turnLeft(double velocity){
+   digitalWrite(dirPin, LOW);
+   analogWrite(pwmPin, velocity);
+}
+
+void turnRight(double velocity){
+  digitalWrite(dirPin, HIGH);
+  analogWrite(pwmPin, velocity);
+}
+
+void stopMotor(){
+  digitalWrite(dirPin, HIGH);
+  analogWrite(pwmPin, 0);
+}
+
+bool analogButtonPressed(){
+  int value = digitalRead(buttonPin);
+  if(value){
+    return false;
+  }else{
+    return true;
+  }
+}
+
+void turnIfDegree(double angle){
+  if(angle > 40.0){
+    turnLeft(angle - 15);
+  }else if(angle < -40.0){
+    turnRight((angle*-1) - 15);
+  }else{
+    stopMotor();
+  }
+}
+  
 
 /*
     readPosCount() function
 */
-void readPosCount() {
+
+void updateRawPos() {
   // Get voltage output by MR sensor
   rawPos = analogRead(sensorPosPin);  //current raw position from MR sensor
   // Calculate differences between subsequent MR sensor readings
@@ -99,31 +160,35 @@ void readPosCount() {
     updatedPos = rawPos + flipNumber * tempOffset; // need to update pos based on what most recent offset is
     flipped = false;
   }
-  double a=0.01197;
-  double b=-3.9707;
+  
+}
+void readPosCount() {
+  updateRawPos();
+
+  
+  //length of device
+  double radius=75;
+
+  //the anngle of the device
   double angle=a*updatedPos+b;
-  double radius=70;
+  
+  //the distance the device moved on the circle
   double distanceCurve=(angle/360)*2*PI*radius;
 
-  double distance=radius*sin(angle*PI/180.0);
-  Serial.println(angle);
+  /*double distance=radius*sin(angle*PI/180.0);*/
 
-  if(angle > 40.0){
-    digitalWrite(dirPin, LOW);
-    analogWrite(pwmPin, angle);
-  }else if(angle < -40.0){
-    digitalWrite(dirPin, HIGH);
-    analogWrite(pwmPin, (angle*-1));
-   
-  }else{
-    analogWrite(pwmPin, 0);
-  }
+  //button logic 
+  bool buttonOn = analogButtonPressed();
+
+  //Serial.println(angle);
+  Serial.println(angle);
+  turnIfDegree(angle);
 }
-  
 
 /*
     Loop function
 */
+
 void loop() {
   // read the position in count
   readPosCount();
