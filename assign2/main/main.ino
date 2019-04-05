@@ -1,8 +1,24 @@
 #include <math.h>
 
+#define SIZE 5
 /*
     DECLARATION
 */
+const int delaytime = 10;
+
+enum ForceType {SPRING, WALL, FRICTION_C, FRICTION_V, HARD_SURFACE, TEXTURE} ;
+
+enum ForceType ftype = FRICTION_C;
+
+//****CONSTANTNTS
+
+//double springConstant = 0.001; //not osc
+//double springConstant = 0.003; // osc
+//double springConstant = 0.005; //osc
+double springConstant = 0.030; //osc
+
+double frictionConstant = 1;
+
 
 //calibration
 //specific device numbers for the sensor
@@ -11,14 +27,16 @@ bool with_calibration = true;
 
 
 //double a=0.01165;
-double a=0.01197;
-double b= with_calibration ? 0.000 : 3.9;
-  
+double a = 0.01197;
+double b = with_calibration ? 0.000 : 3.9;
+
+double distanceCurve=0.0;
+
+
 // Pin
 int pwmPin = 5; // PWM output pin for motor
 int dirPin = 8; // direction output pin for motor
 int sensorPosPin = A2; // input pin for MR sensor
-int buttonPin = 13;
 
 // position tracking
 
@@ -37,8 +55,9 @@ boolean flipped = false;
 
 // Kinematics
 double xh = 0;         // position of the handle [m]
-double lastXh = 0;     //last x position of the handle
+double xh_prev = 0;
 double vh = 0;         //velocity of the handle
+double v[SIZE];
 double lastVh = 0;     //last velocity of the handle
 double lastLastVh = 0; //last last velocity of the handle
 double rp = 0.004191;   //[m]
@@ -50,9 +69,6 @@ double Tp = 0;              // torque of the motor pulley
 double duty = 0;            // duty cylce (between 0 and 255)
 unsigned int output = 0;    // output command to the motor
 
-//buttonData
-bool buttonOn = false;
-
 /*
       Setup function - this function run once when reset button is pressed.
 */
@@ -61,14 +77,14 @@ void setup() {
   // Set up serial communication
   Serial.begin(57600);
 
+  // Set PWM frequency
+  setPwmFrequency(pwmPin, 1);
   // Input pins
   pinMode(sensorPosPin, INPUT); // set MR sensor pin to be an input
-  pinMode(buttonPin ,INPUT); //set buttonPin to be an input
 
   // Output pins
   pinMode(pwmPin, OUTPUT);  // PWM pin for motor
   pinMode(dirPin, OUTPUT);  // dir pin for motor
- 
 
   // Initialize motor
   analogWrite(pwmPin, 0);     // set to not be spinning (0/255)
@@ -77,11 +93,9 @@ void setup() {
   // Initialize position valiables
   lastLastRawPos = analogRead(sensorPosPin);
   lastRawPos = analogRead(sensorPosPin);
-
-    Serial.println("I received: ");
-
-   if(with_calibration){
-     updateRawPos();
+  if(with_calibration){
+      readPosCount();
+      calPosMeter();
      double angle=a*updatedPos+b;
      Serial.println(b);
      b = -1.0 *angle;
@@ -89,46 +103,10 @@ void setup() {
    }   
 }
 
-void turnLeft(double velocity){
-   digitalWrite(dirPin, LOW);
-   analogWrite(pwmPin, velocity);
-}
-
-void turnRight(double velocity){
-  digitalWrite(dirPin, HIGH);
-  analogWrite(pwmPin, velocity);
-}
-
-void stopMotor(){
-  digitalWrite(dirPin, HIGH);
-  analogWrite(pwmPin, 0);
-}
-
-bool analogButtonPressed(){
-  int value = digitalRead(buttonPin);
-  if(value){
-    return false;
-  }else{
-    return true;
-  }
-}
-
-void turnIfDegree(double angle){
-  if(angle > 40.0){
-    turnLeft(angle - 15);
-  }else if(angle < -40.0){
-    turnRight((angle*-1) - 15);
-  }else{
-    stopMotor();
-  }
-}
-  
-
 /*
     readPosCount() function
 */
-
-void updateRawPos() {
+void readPosCount() {
   // Get voltage output by MR sensor
   rawPos = analogRead(sensorPosPin);  //current raw position from MR sensor
   // Calculate differences between subsequent MR sensor readings
@@ -136,7 +114,7 @@ void updateRawPos() {
   lastRawDiff = rawPos - lastLastRawPos;  //difference btwn current raw position and last last raw position
   rawOffset = abs(rawDiff);
   lastRawOffset = abs(lastRawDiff);
-
+  
   // Update position record-keeping vairables
   lastLastRawPos = lastRawPos;
   lastRawPos = rawPos;
@@ -160,12 +138,13 @@ void updateRawPos() {
     updatedPos = rawPos + flipNumber * tempOffset; // need to update pos based on what most recent offset is
     flipped = false;
   }
-  
 }
-void readPosCount() {
-  updateRawPos();
 
-  
+/*
+    calPosMeter()
+*/
+void calPosMeter()
+{
   //length of device
   double radius=75;
 
@@ -173,28 +152,183 @@ void readPosCount() {
   double angle=a*updatedPos+b;
   
   //the distance the device moved on the circle
-  double distanceCurve=(angle/360)*2*PI*radius;
+  distanceCurve=(angle/360)*2*PI*radius;
+
+  xh_prev = xh;
+  xh = distanceCurve;
+
+  lastVh = vh;
+  double distanceMoved = (xh_prev - xh);
+
+  vh = distanceMoved / ((double) delaytime / 1000.0);
+  
 
   /*double distance=radius*sin(angle*PI/180.0);*/
 
-  //button logic 
-  bool buttonOn = analogButtonPressed();
 
   //Serial.println(angle);
-  Serial.println(angle);
-  turnIfDegree(angle);
 }
+/*
+    forceRendering()
+*/
+void forceRendering()
+{
+  // Add the function for force calculation here.
+  switch(ftype){
+    case SPRING:
+      calculateSpringForce();
+      break;
+    case WALL:
+      break;
+    case FRICTION_C:
+      calculateFrictionCForce();
+      break;
+    case FRICTION_V:
+      calculateFrictionVForce();
+      break;
+    case HARD_SURFACE:
+       break;
+    case TEXTURE:
+      break;
+    default:
+      Serial.println("NOT SUPORTED");
+    
+  }
+}
+
+boolean isZero(double x){
+  if(x>0.1 || x< -0.1){
+    return false; 
+  }
+  return true;
+}
+
+int sign(double x){
+  if(isZero(x)){
+    return 0;
+  }
+  if(x>0){
+    return 1;
+  }else{
+    return -1;
+  };
+}
+
+void calculateFrictionCForce(){
+  if (isZero(vh)){
+    force = 0;
+  }else{
+    force=-frictionConstant*sign(vh);
+  }
+  Serial.println(vh);
+}
+
+
+void calculateFrictionVForce(){
+  //TODO
+
+}
+
+void calculateSpringForce(){
+  if(abs(distanceCurve) < 2){
+    force=0;
+  }else{
+     force = distanceCurve*springConstant;
+  }
+
+}
+
+
+/*
+      Output to motor
+*/
+void motorControl()
+{
+
+  Tp = rp / rs * rh * force;  // Compute the require motor pulley torque (Tp) to generate that force
+  // Determine correct direction for motor torque
+  if (force < 0) {
+    digitalWrite(dirPin, HIGH);
+  } else {
+    digitalWrite(dirPin, LOW);
+  }
+
+  // Compute the duty cycle required to generate Tp (torque at the motor pulley)
+  duty = sqrt(abs(Tp) / 0.03);
+
+  // Make sure the duty cycle is between 0 and 100%
+  if (duty > 1) {
+    duty = 1;
+  } else if (duty < 0) {
+    duty = 0;
+  }
+  output = (int)(duty * 255);  // convert duty cycle to output signal
+  // Serial.println(output);
+  analogWrite(pwmPin, output); // output the signal
+}
+/*
+   setPwmFrequency
+*/
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if (pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+    switch (divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
+    }
+    if (pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if (pin == 3 || pin == 11) {
+    switch (divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x7; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
+}
+
+void turnLeft(double velocity){
+   digitalWrite(dirPin, LOW);
+   analogWrite(pwmPin, velocity);
+}
+
+void turnRight(double velocity){
+  digitalWrite(dirPin, HIGH);
+  analogWrite(pwmPin, velocity);
+}
+
+void stopMotor(){
+  digitalWrite(dirPin, HIGH);
+  analogWrite(pwmPin, 0);
+}
+
 
 /*
     Loop function
 */
-
-
-void spring(double distance){
-  
-}
-
 void loop() {
+  // put your main code here, to run repeatedly
   // read the position in count
   readPosCount();
+  // convert position to meters
+  calPosMeter();
+  // calculate rendering force
+  forceRendering();
+  // output to motor
+  motorControl();
+  // delay before next reading:
+  delay(delaytime);
 }
