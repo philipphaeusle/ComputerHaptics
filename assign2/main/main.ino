@@ -1,6 +1,14 @@
 #include <math.h>
 
 #define SIZE 5
+
+// TIMER
+
+int time = millis();
+int lastTime=time;
+
+int tookTime=0;
+
 /*
     DECLARATION
 */
@@ -8,7 +16,7 @@ const int delaytime = 10;
 
 enum ForceType {SPRING, WALL, FRICTION_C, FRICTION_V, HARD_SURFACE, TEXTURE} ;
 
-enum ForceType ftype = WALL;
+enum ForceType ftype = TEXTURE;
 
 //****CONSTANTNTS
 
@@ -19,9 +27,11 @@ double springConstant = 0.030; //osc
 
 double wallConstant = 1;
 
-double frictionConstant = 1;
+double frictionConstant = 0.2;
 
 double wallDistance = 5;
+
+double bumpConstant = 0.3;
 
 
 //calibration
@@ -163,8 +173,9 @@ void calPosMeter()
 
   lastVh = vh;
   double distanceMoved = (xh_prev - xh);
+  
 
-  vh = distanceMoved / ((double) delaytime / 1000.0);
+  vh = distanceMoved / ((double) tookTime / 1000.0);
   
 
   /*double distance=radius*sin(angle*PI/180.0);*/
@@ -194,6 +205,7 @@ void forceRendering()
     case HARD_SURFACE:
        break;
     case TEXTURE:
+      calculateTextureForce();
       break;
     default:
       Serial.println("NOT SUPORTED");
@@ -225,13 +237,30 @@ void calculateFrictionCForce(){
   }else{
     force=-frictionConstant*sign(vh);
   }
-  Serial.println(vh);
+  // Serial.println(vh);
 }
 
 
 void calculateFrictionVForce(){
-  //TODO
+  if (isZero(vh)){
+    force = 0;
+  }else{
+    force=-frictionConstant*vh;
+  }
+}
 
+void calculateTextureForce(){
+  int bumps = 10;
+  if(abs(((int) xh % 10)) > 5){
+    if (isZero(vh)){
+      force = 0;
+    }else{
+      force=-bumpConstant*vh;
+    }
+  }else{
+   
+    force=0;
+  }
 }
 
 void calculateSpringForce(){
@@ -332,6 +361,11 @@ void stopMotor(){
     Loop function
 */
 void loop() {
+  // Timer
+  lastTime = time;
+  time = millis();
+  tookTime=time - lastTime;
+  
   // put your main code here, to run repeatedly
   // read the position in count
   readPosCount();
