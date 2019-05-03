@@ -6,6 +6,7 @@
 
 int time = millis();
 int lastTime=time;
+unsigned long timeHit = 0; //time the hard surface was hit
 
 int tookTime=0;
 
@@ -16,7 +17,8 @@ const int delaytime = 10;
 
 enum ForceType {SPRING, WALL, FRICTION_C, FRICTION_V, HARD_SURFACE, TEXTURE} ;
 
-enum ForceType ftype = TEXTURE;
+enum ForceType ftype = HARD_SURFACE;
+bool debug = false; // FRICTION_V begins to stutter if enabeled!!
 
 //****CONSTANTNTS
 
@@ -25,13 +27,15 @@ enum ForceType ftype = TEXTURE;
 //double springConstant = 0.005; //osc
 double springConstant = 0.030; //osc
 
-double wallConstant = 1;
+double wallConstant = 0.5;
 
-double frictionConstant = 0.2;
+double frictionConstantC = 0.2;
+
+double frictionConstantV = 0.2;
 
 double wallDistance = 5;
 
-double bumpConstant = 0.3;
+double bumpConstant = 0.5;
 
 
 //calibration
@@ -203,6 +207,7 @@ void forceRendering()
       calculateFrictionVForce();
       break;
     case HARD_SURFACE:
+       calculateHardSurfaceForce();
        break;
     case TEXTURE:
       calculateTextureForce();
@@ -235,9 +240,8 @@ void calculateFrictionCForce(){
   if (isZero(vh)){
     force = 0;
   }else{
-    force=-frictionConstant*sign(vh);
+    force=-frictionConstantC*sign(vh);
   }
-  // Serial.println(vh);
 }
 
 
@@ -245,22 +249,27 @@ void calculateFrictionVForce(){
   if (isZero(vh)){
     force = 0;
   }else{
-    force=-frictionConstant*vh;
+    force=-frictionConstantV*vh;
   }
 }
 
 void calculateTextureForce(){
-  int bumps = 10;
-  if(abs(((int) xh % 10)) > 5){
-    if (isZero(vh)){
-      force = 0;
-    }else{
-      force=-bumpConstant*vh;
-    }
+  int range = 30; //mm of distance to render
+  int thickness = 3; //thickness of a bump
+  if(abs((int) xh) > range/2 ){
+    force = 0;
   }else{
-   
-    force=0;
+     if(abs(((int) xh % 2*thickness)) >= thickness){
+      if (isZero(vh)){
+        force = 0;
+      }else{
+        force=-bumpConstant*vh;
+      }
+    }else{
+      force=0;
+    }
   }
+ 
 }
 
 void calculateSpringForce(){
@@ -275,7 +284,33 @@ void calculateWallForce(){
   if(distanceCurve > wallDistance){
     force = -1*sign(distanceCurve)*wallConstant*(wallDistance - abs(distanceCurve));
   }else{
-  	force = 0;
+    force = 0;
+  }
+}
+
+void calculateHardSurfaceForce(){
+  int wall = 30; //where wall is located
+  if(xh > wall){
+    //hitWall
+    if(timeHit != 0){
+       unsigned long t = millis() - timeHit;
+       float A = 5;
+       float alpha = 0.5;
+       float f = 1000.0;
+       t=t/1000;
+       float lhs = A*pow(2.71828,-alpha*t);
+       float rhs = sin(2*3.14*f*t);
+       float wallForce=-1*sign(distanceCurve)*wallConstant*(wallDistance - abs(distanceCurve));
+       float transientForce=-rhs*lhs;
+       float test =transientForce + wallForce;
+       Serial.println(transientForce);
+    }else{
+      timeHit = millis();
+      force = 0;
+    }
+  }else{
+    timeHit = 0;
+    force = 0;
   }
 }
 
@@ -357,6 +392,7 @@ void stopMotor(){
 }
 
 
+
 /*
     Loop function
 */
@@ -377,4 +413,10 @@ void loop() {
   motorControl();
   // delay before next reading:
   delay(delaytime);
+  //Serial.println(xh);
+  if(debug){
+    Serial.print("Position: "); Serial.print(xh); Serial.print("  ");
+    Serial.print("FORCE: "); Serial.print(force * 10); Serial.print("  ");
+    Serial.println("uT");
+  }
 }
