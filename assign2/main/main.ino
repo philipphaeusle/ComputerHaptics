@@ -294,7 +294,7 @@ void calculateHardSurfaceForce(){
     //hitWall
     if(timeHit != 0){
        unsigned long t = millis() - timeHit;
-       float A = 5;
+       float A = 10;
        float alpha = 0.5;
        float f = 1000.0;
        t=t/1000;
@@ -302,8 +302,8 @@ void calculateHardSurfaceForce(){
        float rhs = sin(2*3.14*f*t);
        float wallForce=-1*sign(distanceCurve)*wallConstant*(wallDistance - abs(distanceCurve));
        float transientForce=-rhs*lhs;
-       float test =transientForce + wallForce;
-       Serial.println(transientForce);
+       force =transientForce + wallForce;
+      
     }else{
       timeHit = millis();
       force = 0;
@@ -414,7 +414,7 @@ void loop() {
   // delay before next reading:
   delay(delaytime);
   //Serial.println(xh);
-  if(debug){
+  if(debug && time % 5 == 0){
     Serial.print("Position: "); Serial.print(xh); Serial.print("  ");
     Serial.print("FORCE: "); Serial.print(force * 10); Serial.print("  ");
     Serial.println("uT");
