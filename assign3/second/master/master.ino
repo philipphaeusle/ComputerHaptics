@@ -1,15 +1,42 @@
-#include <Wire.h>
 #include <math.h>
+#include <Wire.h>
 
 #define SIZE 5
 
-const int delaytime = 10;
+// TIMER
+
 int time = millis();
 int lastTime=time;
+unsigned long timeHit = 0; //time the hard surface was hit
 
 int tookTime=0;
 
-bool debug = true; 
+/*
+    DECLARATION
+*/
+const int delaytime = 10;
+
+enum ForceType {SPRING, WALL, FRICTION_C, FRICTION_V, HARD_SURFACE, TEXTURE} ;
+
+enum ForceType ftype = HARD_SURFACE;
+bool debug = false; // FRICTION_V begins to stutter if enabeled!!
+
+//****CONSTANTNTS
+
+//double springConstant = 0.001; //not osc
+//double springConstant = 0.003; // osc
+//double springConstant = 0.005; //osc
+double springConstant = 0.030; //osc
+
+double wallConstant = 0.5;
+
+double frictionConstantC = 0.2;
+
+double frictionConstantV = 0.2;
+
+double wallDistance = 5;
+
+double bumpConstant = 0.5;
 
 
 //calibration
@@ -68,6 +95,7 @@ unsigned int output = 0;    // output command to the motor
 void setup() {
   // Set up serial communication
   Serial.begin(57600);
+
   Wire.begin();
 
   // Set PWM frequency
@@ -167,7 +195,126 @@ void calPosMeter()
 */
 void forceRendering()
 {
-  force = 0;
+  // Add the function for force calculation here.
+  switch(ftype){
+    case SPRING:
+      calculateSpringForce();
+      break;
+    case WALL:
+      calculateWallForce();
+      break;
+    case FRICTION_C:
+      calculateFrictionCForce();
+      break;
+    case FRICTION_V:
+      calculateFrictionVForce();
+      break;
+    case HARD_SURFACE:
+       calculateHardSurfaceForce();
+       break;
+    case TEXTURE:
+      calculateTextureForce();
+      break;
+    default:
+      Serial.println("NOT SUPORTED");
+    
+  }
+}
+
+boolean isZero(double x){
+  if(x>0.1 || x< -0.1){
+    return false; 
+  }
+  return true;
+}
+
+int sign(double x){
+  if(isZero(x)){
+    return 0;
+  }
+  if(x>0){
+    return 1;
+  }else{
+    return -1;
+  };
+}
+
+void calculateFrictionCForce(){
+  if (isZero(vh)){
+    force = 0;
+  }else{
+    force=-frictionConstantC*sign(vh);
+  }
+}
+
+
+void calculateFrictionVForce(){
+  if (isZero(vh)){
+    force = 0;
+  }else{
+    force=-frictionConstantV*vh;
+  }
+}
+
+void calculateTextureForce(){
+  int range = 30; //mm of distance to render
+  int thickness = 3; //thickness of a bump
+  if(abs((int) xh) > range/2 ){
+    force = 0;
+  }else{
+     if(abs(((int) xh % 2*thickness)) >= thickness){
+      if (isZero(vh)){
+        force = 0;
+      }else{
+        force=-bumpConstant*vh;
+      }
+    }else{
+      force=0;
+    }
+  }
+ 
+}
+
+void calculateSpringForce(){
+  if(abs(distanceCurve) < 2){
+    force=0;
+  }else{
+     force = distanceCurve*springConstant;
+  }
+}
+
+void calculateWallForce(){
+  if(distanceCurve > wallDistance){
+    force = -1*sign(distanceCurve)*wallConstant*(wallDistance - abs(distanceCurve));
+  }else{
+    force = 0;
+  }
+}
+
+void calculateHardSurfaceForce(){
+  int wall = 30; //where wall is located
+  if(xh > wall){
+    //hitWall
+    if(timeHit != 0){
+       unsigned long t = millis() - timeHit;
+       float A = 10;
+       float alpha = 0.5;
+       float f = 1000.0;
+       t=t/1000;
+       float lhs = A*pow(2.71828,-alpha*t);
+       float rhs = sin(2*3.14*f*t);
+       float wallForce=-1*sign(distanceCurve)*wallConstant*(wallDistance - abs(distanceCurve));
+       float transientForce=-rhs*lhs;
+       force =transientForce + wallForce;
+      
+    }else{
+      timeHit = millis();
+      force = 0;
+    }
+  }else{
+    timeHit = 0;
+    force = 0;
+  }
 }
 
 
@@ -232,11 +379,27 @@ void setPwmFrequency(int pin, int divisor) {
   }
 }
 
+void turnLeft(double velocity){
+   digitalWrite(dirPin, LOW);
+   analogWrite(pwmPin, velocity);
+}
+
+void turnRight(double velocity){
+  digitalWrite(dirPin, HIGH);
+  analogWrite(pwmPin, velocity);
+}
+
+void stopMotor(){
+  digitalWrite(dirPin, HIGH);
+  analogWrite(pwmPin, 0);
+}
+
+
+
 /*
     Loop function
 */
 void loop() {
-
   // Timer
   lastTime = time;
   time = millis();
@@ -247,12 +410,9 @@ void loop() {
   readPosCount();
   // convert position to meters
   calPosMeter();
-
-  //send position & recieve force
-  sendRecv();
-  
   // calculate rendering force
   //forceRendering();
+  sendRcv();
   // output to motor
   motorControl();
   // delay before next reading:
@@ -261,16 +421,15 @@ void loop() {
   if(debug && time % 5 == 0){
     Serial.print("Position: "); Serial.print(xh); Serial.print("  ");
     Serial.print("FORCE: "); Serial.print(force * 10); Serial.print("  ");
-    Serial.println("");
+    Serial.println("uT");
   }
 }
 
+void sendRcv(){
+  Serial.println(xh);
 
-void sendRecv() {
   Wire.beginTransmission(8); // transmit to device #8
-  float x = xh;
-  byte* px = (byte*)&x;
-  Serial.println("Sending");                               
+  byte* px = (byte*)&xh;                              
   Wire.write(px,4);              // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   
@@ -284,8 +443,6 @@ void sendRecv() {
    float_Union.float_b[1] = dataArray[1];
    float_Union.float_b[2] = dataArray[2];
    float_Union.float_b[3] = dataArray[3];    
-   float slaveForce = float_Union.fval;
-   force = slaveForce;
-   Serial.println(slaveForce);
-  
+   float NUMBER = float_Union.fval  ;
+   Serial.println(NUMBER);
 }

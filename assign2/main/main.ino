@@ -398,6 +398,7 @@ void stopMotor(){
 */
 void loop() {
   // Timer
+  Serial.println(xh);
   lastTime = time;
   time = millis();
   tookTime=time - lastTime;
