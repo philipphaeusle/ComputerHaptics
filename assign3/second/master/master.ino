@@ -3,7 +3,13 @@
 
 #define SIZE 5
 
-bool debug = false; 
+const int delaytime = 10;
+int time = millis();
+int lastTime=time;
+
+int tookTime=0;
+
+bool debug = true; 
 
 
 //calibration
@@ -230,13 +236,23 @@ void setPwmFrequency(int pin, int divisor) {
     Loop function
 */
 void loop() {
+
+  // Timer
+  lastTime = time;
+  time = millis();
+  tookTime=time - lastTime;
+  
   // put your main code here, to run repeatedly
   // read the position in count
   readPosCount();
   // convert position to meters
   calPosMeter();
+
+  //send position & recieve force
+  sendRecv();
+  
   // calculate rendering force
-  forceRendering();
+  //forceRendering();
   // output to motor
   motorControl();
   // delay before next reading:
@@ -245,20 +261,14 @@ void loop() {
   if(debug && time % 5 == 0){
     Serial.print("Position: "); Serial.print(xh); Serial.print("  ");
     Serial.print("FORCE: "); Serial.print(force * 10); Serial.print("  ");
-    Serial.println("uT");
+    Serial.println("");
   }
-}
-
-void setup() {
-  Serial.begin(9600);      
-  Wire.begin();
 }
 
 
 void sendRecv() {
   Wire.beginTransmission(8); // transmit to device #8
-  i++;
-  float x = sin(0.1*(double) i);
+  float x = xh;
   byte* px = (byte*)&x;
   Serial.println("Sending");                               
   Wire.write(px,4);              // sends 4 bytes
@@ -274,8 +284,8 @@ void sendRecv() {
    float_Union.float_b[1] = dataArray[1];
    float_Union.float_b[2] = dataArray[2];
    float_Union.float_b[3] = dataArray[3];    
-   float NUMBER = float_Union.fval  ;
-   Serial.println(NUMBER);
+   float slaveForce = float_Union.fval;
+   force = slaveForce;
+   Serial.println(slaveForce);
   
 }
-
