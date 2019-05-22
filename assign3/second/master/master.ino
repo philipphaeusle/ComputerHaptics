@@ -88,6 +88,8 @@ double Tp = 0;              // torque of the motor pulley
 double duty = 0;            // duty cylce (between 0 and 255)
 unsigned int output = 0;    // output command to the motor
 
+float positionX = 0.0;
+
 /*
       Setup function - this function run once when reset button is pressed.
 */
@@ -177,6 +179,7 @@ void calPosMeter()
 
   xh_prev = xh;
   xh = distanceCurve;
+  positionX = xh;
 
   lastVh = vh;
   double distanceMoved = (xh_prev - xh);
@@ -426,13 +429,19 @@ void loop() {
 }
 
 void sendRcv(){
-  Serial.println(xh);
+  //Serial.println(xh);
 
   Wire.beginTransmission(8); // transmit to device #8
-  byte* px = (byte*)&xh;                              
-  Wire.write(px,4);              // sends 4 bytes
+
+  union float_tag1 {byte float_b[4]; float fval;} float_Union1;  
+  float_Union1.fval = xh;
+
+  //byte* px = (byte*)&xh;                              
+  for(int i = 0; i < 4; i++) { 
+    Wire.write(float_Union1.float_b[i]);              // sends one byte
+  }     
   Wire.endTransmission();    // stop transmitting
-  
+
   Wire.requestFrom(8,4);
    byte dataArray[4];
    for(int i=0; i<4; i++){
@@ -443,6 +452,11 @@ void sendRcv(){
    float_Union.float_b[1] = dataArray[1];
    float_Union.float_b[2] = dataArray[2];
    float_Union.float_b[3] = dataArray[3];    
-   float NUMBER = float_Union.fval  ;
-   Serial.println(NUMBER);
+   float retVal = float_Union.fval  ;
+   force = retVal * 0.80;
+   if (retVal < 0.3 && retVal > -0.3) {
+     force = 0;
+   }
+   Serial.println(retVal);
+
 }

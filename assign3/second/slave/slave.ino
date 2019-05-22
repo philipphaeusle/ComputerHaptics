@@ -18,10 +18,6 @@
 #define SIZE 5
 
 
-//define Kp
-const float pConstant = 0.1;
-const float dConstant = 0.05;
-
 const int delaytime = 10;
 int time = millis();
 int lastTime=time;
@@ -84,7 +80,7 @@ float s=0.0;
 
 void setup() {
   Wire.begin(8); 
-  Serial.begin(9600);  
+  Serial.begin(57600);  
   Wire.onReceive(receiveEvent);
   Wire.onRequest(requestEvent);
   Serial.println("SLAVE");
@@ -119,12 +115,15 @@ void setup() {
 void loop() {
   delay(10);
 }
+float posMas;
 
 void requestEvent(){
-  float temp=-force;
+  //Serial.println(vh);
+  float temp=force;
   byte* px = (byte*)&temp;
   Wire.write(px,4);
 }
+
 
 void receiveEvent(int howMany) {
  
@@ -139,21 +138,32 @@ void receiveEvent(int howMany) {
    float_Union.float_b[2] = dataArray[2];
    float_Union.float_b[3] = dataArray[3];    
    float positionMaster = float_Union.fval  ;
-
+  posMas = positionMaster;
    
   readPosCount();
    calPosMeter();
 
   //calculate force to go to pos positionMaster
   float error = positionMaster - xh; 
-  force = pConstant*error; //P-controller
-  //force = pConstant*error - dConstant *vh; //PD - Controller
-  Serial.print(positionMaster);
-  Serial.print(" : ");
-  Serial.print(xh);
-  Serial.println("************************");
-  force=0;
-  //motorControl();
+
+  //define Kp
+  const float pConstant = 0.1;
+  const float dConstant = 0.005;
+
+
+  //force = pConstant*error; //P-controller
+  force = pConstant*error - dConstant *vh; //PD - Controller
+  //Serial.println(force);
+  //Serial.print(" : ");
+  //Serial.println("************************");
+  //force=0;
+  force *= -1;
+  if (force < 0.3 && force > -0.3) {
+    force = 0;
+  }
+  Serial.println(force);
+
+  motorControl();
 }
 
 
