@@ -3,6 +3,8 @@
 
 #define SIZE 5
 
+bool isPosForce = false;
+
 // TIMER
 
 int time = millis();
@@ -453,10 +455,28 @@ void sendRcv(){
    float_Union.float_b[2] = dataArray[2];
    float_Union.float_b[3] = dataArray[3];    
    float retVal = float_Union.fval  ;
-   force = retVal * 0.80;
-   if (retVal < 0.3 && retVal > -0.3) {
-     force = 0;
-   }
-   Serial.println(retVal);
 
+   if (isPosForce) {
+     force = retVal * 0.80;
+     if (retVal < 0.3 && retVal > -0.3) {
+       force = 0;
+     }
+     Serial.println(retVal);
+  } else {
+    float positionSlave = retVal;
+
+    float error = positionSlave - xh; 
+    //define Kp
+    const float pConstant = 0.1;
+    const float dConstant = 0.005;
+    
+    //force = pConstant*error; //P-controller
+    force = pConstant * error - dConstant * vh; //PD - Controller
+    force *= 1;
+    if (force < 0.3 && force > -0.3) {
+      force = 0;
+    }
+    force *= 1;
+    Serial.println(force);
+  }
 }

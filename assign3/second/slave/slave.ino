@@ -17,6 +17,8 @@
 
 #define SIZE 5
 
+bool isPosForce = false;
+
 
 const int delaytime = 10;
 int time = millis();
@@ -119,38 +121,43 @@ float posMas;
 
 void requestEvent(){
   //Serial.println(vh);
-  float temp=force;
-  byte* px = (byte*)&temp;
-  Wire.write(px,4);
+  if (isPosForce) {
+     float temp=force;
+    byte* px = (byte*)&temp;
+    Wire.write(px,4);
+  } else {
+    float temp=xh;
+    byte* px = (byte*)&temp;
+    Wire.write(px,4);
+  }
 }
 
 
 void receiveEvent(int howMany) {
- 
   byte dataArray[4];
-   for(int i=0; i<howMany; i++){
+  for(int i=0; i<howMany; i++){
     dataArray[i]=Wire.read();
-   }
-   
-   union float_tag {byte float_b[4]; float fval;} float_Union;    
-   float_Union.float_b[0] = dataArray[0];
-   float_Union.float_b[1] = dataArray[1];
-   float_Union.float_b[2] = dataArray[2];
-   float_Union.float_b[3] = dataArray[3];    
-   float positionMaster = float_Union.fval  ;
+  }
+  
+  union float_tag {byte float_b[4]; float fval;} float_Union;    
+  float_Union.float_b[0] = dataArray[0];
+  float_Union.float_b[1] = dataArray[1];
+  float_Union.float_b[2] = dataArray[2];
+  float_Union.float_b[3] = dataArray[3];    
+  float positionMaster = float_Union.fval  ;
   posMas = positionMaster;
-   
+  
   readPosCount();
-   calPosMeter();
-
+  calPosMeter();
+  
   //calculate force to go to pos positionMaster
   float error = positionMaster - xh; 
-
+  
   //define Kp
   const float pConstant = 0.1;
   const float dConstant = 0.005;
-
-
+  
+  
   //force = pConstant*error; //P-controller
   force = pConstant*error - dConstant *vh; //PD - Controller
   //Serial.println(force);
@@ -162,7 +169,7 @@ void receiveEvent(int howMany) {
     force = 0;
   }
   Serial.println(force);
-
+  
   motorControl();
 }
 
