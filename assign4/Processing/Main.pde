@@ -35,13 +35,16 @@ void setup() {
   animation2 = new Animation("../Topdown_vehicle_sprites_pack/Police_animation/", 3,carSize);
   
   setUpData();
+  setupHapkitControl();
 }
 
 int c = 0;
 
 void draw() { 
-    
-  float dx = mouseX - xpos;
+  float hapkitPos = getHapkitPos();
+  renderForce(0);
+  float pos = width/2 + (hapkitPos * width/150);
+  float dx = pos - xpos;
   xpos = xpos + dx/drag;
   ypos = height/2;
   
@@ -70,6 +73,7 @@ void draw() {
   text("Score: "+score,width/2,60); 
   
   if(crashed){
+    stopHapkitInstance();
     gameOver=true;
     textFont(f,96);                 
     fill(0); 
@@ -109,6 +113,7 @@ void setUpData(){
 }
 
 void keyPressed() {
+  startHapkitInstance();
   println(key);
   if(key=='r'){
     gameOver=false;
