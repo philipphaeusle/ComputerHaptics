@@ -29,7 +29,7 @@ void loop() {
 }
 
 void requestEvent(){
-  float temp=asin(s);
+  float temp=s*-1;
   byte* px = (byte*)&temp;
   Wire.write(px,4);
 }

@@ -23,8 +23,7 @@ void loop() {
   Wire.beginTransmission(8); // transmit to device #8
   i++;
   float x = sin(0.1*(double) i);
-  byte* px = (byte*)&x;
-  Serial.println("Sending");                               
+  byte* px = (byte*)&x;                               
   Wire.write(px,4);              // sends 4 bytes
   Wire.endTransmission();    // stop transmitting
   
@@ -39,8 +38,11 @@ void loop() {
    float_Union.float_b[2] = dataArray[2];
    float_Union.float_b[3] = dataArray[3];    
    float NUMBER = float_Union.fval  ;
-   Serial.println(NUMBER);
-  
-  delay(100);
-}
 
+
+  Serial.print("X: "); Serial.print(x); Serial.print("  ");
+  Serial.print("Y: "); Serial.print(NUMBER); Serial.print("  ");
+  Serial.println("uT");
+  
+  delay(10);
+}

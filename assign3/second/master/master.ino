@@ -3,7 +3,7 @@
 
 #define SIZE 5
 
-bool isPosForce = false;
+bool isPosForce = true;
 
 // TIMER
 
@@ -311,26 +311,30 @@ void sendRcv(){
    float retVal = float_Union.fval  ;
 
    if (isPosForce) {
-     force = retVal * 0.80;
+     force = -retVal * 0.80;
      if (retVal < 0.3 && retVal > -0.3) {
        force = 0;
      }
-     Serial.println(retVal);
+      Serial.print(force);
+      Serial.print("\t");
+      Serial.println(xh);
   } else {
     float positionSlave = retVal;
 
     float error = positionSlave - xh; 
     //define Kp
     const float pConstant = 0.1;
-    const float dConstant = 0.005;
+    const float dConstant = 0.001;
     
     //force = pConstant*error; //P-controller
     force = pConstant * error - dConstant * vh; //PD - Controller
-    force *= 1;
+    force *= -1;
     if (force < 0.3 && force > -0.3) {
       force = 0;
     }
     force *= 1;
-    Serial.println(force);
+    Serial.print(force);
+    Serial.print("\t");
+    Serial.println(xh);
   }
 }
