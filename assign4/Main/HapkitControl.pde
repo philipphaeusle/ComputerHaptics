@@ -1,16 +1,16 @@
 import processing.serial.*;
 
 /*class Serial {
-  public Serial(Object o, String s, int i) {
-  }
-  public String readStringUntil(char c){
-    return "";
-  }
-  public void bufferUntil(char c){
-  }
-  public void write(String s){
-  }
-}*/
+ public Serial(Object o, String s, int i) {
+ }
+ public String readStringUntil(char c){
+ return "";
+ }
+ public void bufferUntil(char c){
+ }
+ public void write(String s){
+ }
+ }*/
 
 Serial myPort;
 
@@ -34,7 +34,8 @@ void setupHapkitControl() {
   try {
     myPort = new Serial(this, "/dev/ttyUSB0", 57600);
     myPort.bufferUntil('\n');
-  } catch(Exception e) {
+  } 
+  catch(Exception e) {
     // ignore
   }
 }
@@ -44,8 +45,8 @@ void renderForce(float force) {
     return;
   }
   if (!hIsConnected) {
-      myPort.write("START\n");
-      return;
+    myPort.write("START\n");
+    return;
   }
   myPort.write(Float.toString(force) + "\n");
 }

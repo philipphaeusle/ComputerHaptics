@@ -5,7 +5,7 @@ class Animation {
   int imageCount;
   int frame;
   int c;
-  
+
   Animation(String imagePrefix, int count, int size) {
     imageCount = count;
     images = new PImage[imageCount];
@@ -19,12 +19,12 @@ class Animation {
 
   void display(float xpos, float ypos) {
     c++;
-    if (c % 5 == 0){
+    if (c % 5 == 0) {
       frame = (frame+1) % imageCount;
     }
     image(images[frame], xpos, ypos);
   }
-  
+
   int getWidth() {
     return images[0].width;
   }
