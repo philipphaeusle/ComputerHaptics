@@ -126,14 +126,13 @@ class Street {
               rotate(chasedCarAngle);
               image(chasedCar, -chasedCar.width/2, -chasedCar.height/2);
               rotate(-chasedCarAngle);
-              translate(-xMidDraw, -yMidDraw);
+              translate(-chasedCarX, -yMidDraw);
               break;
           }
         }
         break;
       }
     }
-    //image(chasedCar, width/2, height/4);
 
 
     /*for(int i=1; i<numPoints; i++){
