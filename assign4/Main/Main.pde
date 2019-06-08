@@ -1,6 +1,13 @@
 import processing.sound.*;
 
 Animation animation1, animation2;
+PImage chasedCar;
+float chasedCarAngle;
+float chasedCarAngleDrag = 10.0;
+float chasedCarX;
+float chasedCarXDrag = 10.0;
+
+
 Street street;
 PFont f;     
 
@@ -23,7 +30,7 @@ boolean gameOver=false;
 int score=0;
 int framesAlready=0;
 
-boolean withSound = true;
+boolean withSound = false;
 SoundFile policeSound, crashSound;
 
 void setup() {
@@ -40,12 +47,23 @@ void setup() {
 
   animation1 = new Animation("../ressources/Topdown_vehicle_sprites_pack/ambulance_animation/", 3, carSize);
   animation2 = new Animation("../ressources/Topdown_vehicle_sprites_pack/Police_animation/", 3, carSize);
-
+  chasedCar = loadImage("../ressources/Topdown_vehicle_sprites_pack/Audi.png");
+  chasedCar.resize(0, carSize);
+  
+  
   setUpData();
   setupHapkitControl();
+  
+  chasedCarX = width/2;
+  chasedCarAngle = 0;
 }
 
 int c = 0;
+
+float getNewDraggedValue (float oldPos, float newPos, float drag) {
+  float dx = newPos - oldPos;
+  return oldPos + dx/drag;
+}
 
 float getPos() {
   if (myPort == null) {
@@ -59,8 +77,7 @@ float getPos() {
 void draw() { 
   float pos = getPos();
   renderForce(0);
-  float dx = pos - xpos;
-  xpos = xpos + dx/drag;
+  xpos = getNewDraggedValue(xpos, pos, drag);
   ypos = height/2;
 
   background(128, 128, 128);

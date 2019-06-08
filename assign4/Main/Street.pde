@@ -51,6 +51,8 @@ class Street {
     stroke(1, 1, 1); // dont make it black
     strokeWeight(1);
 
+
+    // draw white road marks
     for (int i=1; i<numPoints-2; i++) {
       int mid = (points[i][0] + points[i][1]) / 2;
 
@@ -68,6 +70,7 @@ class Street {
       translate(-mid, -points[i][2]);
     }
 
+    // draws orange line with tangents
     for (int i=0; i<numPoints-4; i++) {
       noFill();
       stroke(255, 102, 0);
@@ -88,6 +91,49 @@ class Street {
         line(x, y, cos(a)*20 + x, sin(a)*20 + y);
       }
     }
+    
+    // draw chased car
+    int chasedCarY = height/8;
+    //println(chasedCarY);
+    for (int i=1; i<numPoints-2; i++) {
+      int pointY = points[i][2];
+      int nextPointY = points[i+1][2];
+      if (pointY <= chasedCarY && nextPointY >= chasedCarY) {
+        // linepoint after car
+        int steps = 10;
+        for (int j = 0; j <= steps; j++) {
+          float t = j / float(steps);
+          float tNext = (j+1) / float(steps);
+          float y = curvePoint(points[i-1][2], points[i][2], points[i+1][2], points[i+2][2], t);
+          float yNext = curvePoint(points[i-1][2], points[i][2], points[i+1][2], points[i+2][2], tNext);
+          
+          if (y <= chasedCarY && yNext >= chasedCarY) {
+              float xL = curvePoint(points[i-1][0], points[i][0], points[i+1][0], points[i+2][0], t);
+              float xR = curvePoint(points[i-1][1], points[i][1], points[i+1][1], points[i+2][1], t);
+              int xMid = (int)(xL + xR) / 2;
+              
+              float tx = curveTangent(points[i-1][0], points[i][0], points[i+1][0], points[i+2][0], t);
+              float ty = curveTangent(points[i-1][2], points[i][2], points[i+1][2], points[i+2][2], t);
+              float angle = atan2(ty, tx);
+              angle -= PI/2.0;
+              int xMidDraw = xMid;
+              int yMidDraw = chasedCarY;
+              
+              chasedCarAngle = getNewDraggedValue(chasedCarAngle, angle, chasedCarAngleDrag);
+              chasedCarX = getNewDraggedValue(chasedCarX, xMidDraw, chasedCarXDrag);
+              
+              translate(chasedCarX, yMidDraw);
+              rotate(chasedCarAngle);
+              image(chasedCar, -chasedCar.width/2, -chasedCar.height/2);
+              rotate(-chasedCarAngle);
+              translate(-xMidDraw, -yMidDraw);
+              break;
+          }
+        }
+        break;
+      }
+    }
+    //image(chasedCar, width/2, height/4);
 
 
     /*for(int i=1; i<numPoints; i++){
