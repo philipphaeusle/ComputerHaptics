@@ -7,6 +7,9 @@ float chasedCarAngleDrag = 10.0;
 float chasedCarX;
 float chasedCarXDrag = 10.0;
 
+float mainCarAngle = 0.0;
+float mainCarAngleDrag = 10.0;
+
 
 Street street;
 PFont f;     
@@ -49,16 +52,20 @@ void setup() {
   animation2 = new Animation("../ressources/Topdown_vehicle_sprites_pack/Police_animation/", 3, carSize);
   chasedCar = loadImage("../ressources/Topdown_vehicle_sprites_pack/Audi.png");
   chasedCar.resize(0, carSize);
-  
-  
+
+
   setUpData();
   setupHapkitControl();
-  
+
   chasedCarX = width/2;
   chasedCarAngle = 0;
 }
 
 int c = 0;
+
+float sigmoid(float x) {
+  return (float)(1/( 1 + Math.pow(Math.E, (-1*x))));
+}
 
 float getNewDraggedValue (float oldPos, float newPos, float drag) {
   float dx = newPos - oldPos;
@@ -75,46 +82,47 @@ float getPos() {
 }
 
 void draw() { 
+  // calculate positions
   float pos = getPos();
   renderForce(0);
   xpos = getNewDraggedValue(xpos, pos, drag);
-  ypos = height/2;
+  ypos = height * 0.6;
 
+  float newCarAngle = (pos-xpos) * 0.01;
+  newCarAngle = sigmoid(newCarAngle)-0.5;
+  newCarAngle *= PI/2;
+
+  mainCarAngle = getNewDraggedValue(mainCarAngle, newCarAngle, mainCarAngleDrag);
+
+  street.setCarPositions(xpos, ypos, carSize, animation1);
+
+  // draw stuff
   background(128, 128, 128);
   street.drawSurfaces();
   street.display();
-  
   street.drawMagnets();
-  
+  animation2.display(xpos, ypos);
+
+  // collisions
   int underground=street.detectUndergroundCollision();
-  
-  if(underground!=0){
+
+  if (underground!=0) {
     renderUnderground(underground);
   }
- 
+
   street.moveDown();
-  int i=(int) random(0,200);
-  if(i<1){
+  int i=(int) random(0, 200);
+  if (i<1) {
     street.generateUnderground(1);
   }
   street.cleanUnderground();
   street.cleanMagnets();
 
-  /*if (mousePressed) {
-    animation1.display(xpos-animation1.getWidth()/2, ypos);
-  } else {
-    animation2.display(xpos-animation1.getWidth()/2, ypos);
-  }*/
-  
-  animation2.display(xpos-animation1.getWidth()/2, ypos);
-  
   if (c1++ % 600 ==0 ) {
     println("SPEEDUP!");
     street.speedUp(1);
   }
-  float carX=xpos;
-  float carY=ypos;
-  street.setCarPositions(carX, carY, carSize, animation1);
+
   boolean crashed=street.detectCollision();
 
   score=c1-framesAlready-1; //todo: maybe redo;
@@ -140,7 +148,6 @@ void draw() {
       crashSound.play();
     }
   }
- 
 }
 
 void setUpData() {
