@@ -84,6 +84,8 @@ void draw() {
   street.drawSurfaces();
   street.display();
   
+  street.drawMagnets();
+  
   int underground=street.detectUndergroundCollision();
   
   if(underground!=0){
@@ -96,6 +98,7 @@ void draw() {
     street.generateUnderground(1);
   }
   street.cleanUnderground();
+  street.cleanMagnets();
 
   /*if (mousePressed) {
     animation1.display(xpos-animation1.getWidth()/2, ypos);

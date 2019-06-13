@@ -5,6 +5,7 @@ class Street {
   
  
   ArrayList<int []> surfaces = new  ArrayList<int []>(); // y,h
+  ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force
   
   int[][][] carPositions=new int[3][2][2]; // left, mid, x eg.
 
@@ -14,6 +15,19 @@ class Street {
   int speed = 3;
   int streetWidth;
   int rnoise = 30;
+  
+  int undergroundSize=450;
+  PImage imgSurfaceStones = loadImage("../ressources/stone.png");
+  
+  PImage magBlue = loadImage("../ressources/magnet_blue.png");
+  PImage magRed = loadImage("../ressources/magnet_red.png");
+  
+  PImage magBlueR = loadImage("../ressources/magnet_blue_right.png");
+  PImage magRedR = loadImage("../ressources/magnet_red_right.png");
+  
+ /* PImage magBlue_mirror=
+  PImage magRed_mirror=*/
+  
 
   Street(int diff, int r1, int streetWidth, int[][] points, int numPoints) {
     this.diff=diff;
@@ -21,6 +35,14 @@ class Street {
     this.streetWidth=streetWidth;
     this.points=points;
     this.numPoints=numPoints;
+    
+    imgSurfaceStones.resize(width, undergroundSize);
+   
+    magBlue.resize(100,100);
+    magRed.resize(100, 100);
+    
+    magBlueR.resize(100,100);
+    magRedR.resize(100, 100);
   }
 
   void display() {
@@ -178,7 +200,7 @@ class Street {
   void generateUnderground(int type){
     
     int[] temp= new int[3];
-    int h=(int) random(300,450);
+    int h=(int) random(300,undergroundSize);
     temp[0]=0-h;
     temp[1]=h;
     temp[2]=type;
@@ -189,6 +211,20 @@ class Street {
     }   
     surfaces.add(temp);
   }
+  
+  void generateMagnets(int x, int y, int leftOrRight){
+    int[] temp = new int[4];
+    temp[2]=(int) random(-100,100);
+    if(leftOrRight==0){
+      temp[0]=x-200;
+    }else{
+      temp[0]=x+100;
+    }
+    temp[1]=y;
+    temp[3]=leftOrRight;
+    magnets.add(temp);
+  }
+  
   void setCarPositions(float carX, float carY, int carSize, Animation animation){
     int carWidth=animation.getWidth()/3;
     int pixelToMove=carSize/10;
@@ -235,12 +271,30 @@ class Street {
       points[0][0] = (width/2 - streetWidth/2) + (int)random(-r1, r1);
       points[0][1] = points[0][0] + streetWidth;
       points[0][2] = -diff*5;
+      
+      //add magnets
+      float temp=random(0,10);
+      if(random(0,100)<=100.0){
+        if(temp<5.0){
+          generateMagnets(points[0][0],points[0][2],0);
+        }else{
+          generateMagnets(points[0][1],points[0][2],1);
+        }
+         
+      }
     }
     //surfaces
      for (int i=surfaces.size()-1; i>=0; i--){
       int[] temp=surfaces.get(i);
       temp[0]+=speed;
       surfaces.set(i,temp);
+     }  
+     
+     //magnets
+     for (int i=magnets.size()-1; i>=0; i--){
+      int[] temp=magnets.get(i);
+      temp[1]+=speed;
+      magnets.set(i,temp);
      }  
   }
   
@@ -252,11 +306,50 @@ class Street {
     }
   }
   
+   void cleanMagnets(){
+    for (int i=magnets.size()-1; i>=0; i--){
+      if(magnets.get(i)[0] >= height){
+        magnets.remove(i);
+      }      
+    }
+  }
+  
   void drawSurfaces(){
     for(int[] elem : surfaces){
-      fill(255,0,0);
+      //TODO: switch surface textures
+       image(imgSurfaceStones, 0, elem[0]);
+      /*fill(139,90,43);
       rect(0, elem[0], width, elem[1]);
-      noFill();
+      noFill();*/
+    }
+  }
+  
+   void drawMagnets(){
+     //TODO size defined by strongness
+    for(int[] elem : magnets){
+      //fill(255,0,0);
+      //float factor=elem[2];
+      //int mwidth=50*(int)(factor*0.1);
+      //int mheight=20*(int)(factor*0.1);
+      //rect(elem[0], elem[1], 20, 50);
+     
+      //ellipse(elem[0], elem[1],elem[2], elem[2]);
+      if(elem[2]>0){
+        if(elem[3]==1){
+          image(magRedR,elem[0],elem[1]);
+        }else{
+         image(magRed,elem[0],elem[1]);
+        }
+      }else{
+        if(elem[3]==1){
+          image(magBlueR,elem[0],elem[1]);
+        }else{
+          image(magBlue,elem[0],elem[1]);
+        }
+   
+      }
+     
+      //noFill();
     }
   }
   
