@@ -68,3 +68,16 @@ void stopHapkitInstance() {
   }
   myPort.write("STOP\n");
 }
+
+void renderUnderground(int type) {
+ switch(type){
+   case 0:
+   break;
+   case 1:
+     float force=random(-2,2);
+     renderForce(force);
+   break;
+   default:
+   break;
+ }
+}

@@ -81,22 +81,38 @@ void draw() {
   ypos = height/2;
 
   background(128, 128, 128);
-
+  street.drawSurfaces();
   street.display();
+  
+  int underground=street.detectUndergroundCollision();
+  
+  if(underground!=0){
+    renderUnderground(underground);
+  }
+ 
+  street.moveDown();
+  int i=(int) random(0,200);
+  if(i<1){
+    street.generateUnderground(1);
+  }
+  street.cleanUnderground();
 
-  if (mousePressed) {
+  /*if (mousePressed) {
     animation1.display(xpos-animation1.getWidth()/2, ypos);
   } else {
     animation2.display(xpos-animation1.getWidth()/2, ypos);
-  }
-
+  }*/
+  
+  animation2.display(xpos-animation1.getWidth()/2, ypos);
+  
   if (c1++ % 600 ==0 ) {
     println("SPEEDUP!");
     street.speedUp(1);
   }
   float carX=xpos;
   float carY=ypos;
-  boolean crashed=street.detectCollision(carX, carY, carSize, animation1);
+  street.setCarPositions(carX, carY, carSize, animation1);
+  boolean crashed=street.detectCollision();
 
   score=c1-framesAlready-1; //todo: maybe redo;
   textFont(f, 16);                 
@@ -121,6 +137,7 @@ void draw() {
       crashSound.play();
     }
   }
+ 
 }
 
 void setUpData() {
