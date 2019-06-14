@@ -37,7 +37,7 @@ boolean withSound = false;
 SoundFile policeSound, crashSound;
 
 void setup() {
-  size(1640, 960);
+  size(1200, 700);
   background(255, 204, 204);
   frameRate(60);
   f = createFont("Sans", 16, true); 
@@ -82,6 +82,7 @@ float getPos() {
 }
 
 void draw() { 
+  //println(frameRate);
   // calculate positions
   float pos = getPos();
   renderForce(0);
@@ -98,6 +99,7 @@ void draw() {
 
   // draw stuff
   background(128, 128, 128);
+  street.drawWhiteLines();
   street.drawSurfaces();
   street.display();
   street.drawMagnets();

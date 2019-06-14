@@ -6,7 +6,7 @@ class Street {
   int [][] points = new int[numPoints][3]; // xL, xR, y
 
   ArrayList<int []> surfaces = new  ArrayList<int []>(); // y,h
-  ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force
+  ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force, lr
 
   int r = 90;
   int r1;
@@ -16,7 +16,7 @@ class Street {
   int rnoise = 30;
 
   int undergroundSize=450;
-  PImage imgSurfaceStones = loadImage("../ressources/stone.png");
+  PImage imgSurfaceStones = loadImage("../ressources/rocks_2.png");
 
   PImage magBlue = loadImage("../ressources/magnet_blue.png");
   PImage magRed = loadImage("../ressources/magnet_red.png");
@@ -72,29 +72,6 @@ class Street {
     curveVertex(width+500, -500);
     curveVertex(width+500, -500);
     endShape();
-
-    fill(255, 255, 255);
-    stroke(1, 1, 1); // dont make it black
-    strokeWeight(1);
-
-
-    // draw white road marks
-    for (int i=1; i<numPoints-2; i++) {
-      int mid = (points[i][0] + points[i][1]) / 2;
-
-      float tx = curveTangent(points[i-1][0], points[i][0], points[i+1][0], points[i+2][0], 0);
-      float ty = curveTangent(points[i-1][2], points[i][2], points[i+1][2], points[i+2][2], 0);
-      float angle = atan2(ty, tx);
-      int blockHeight = 50;
-      int blockWidth = 16;
-
-      angle -= PI/2.0;
-      translate(mid, points[i][2]);
-      rotate(angle);
-      rect(-blockWidth/2, -blockHeight/2, blockWidth, blockHeight, 2);
-      rotate(-angle);
-      translate(-mid, -points[i][2]);
-    }
 
     // draws orange line with tangents
     /* for (int i=0; i<numPoints-4; i++) {
@@ -312,7 +289,7 @@ class Street {
 
   void cleanUnderground() {
     for (int i=surfaces.size()-1; i>=0; i--) {
-      if (surfaces.get(i)[0] >= height) {
+      if (surfaces.get(i)[1] >= height) {
         surfaces.remove(i);
       }
     }
@@ -320,7 +297,7 @@ class Street {
 
   void cleanMagnets() {
     for (int i=magnets.size()-1; i>=0; i--) {
-      if (magnets.get(i)[0] >= height) {
+      if (magnets.get(i)[1] >= height) {
         magnets.remove(i);
       }
     }
@@ -333,6 +310,31 @@ class Street {
       /*fill(139,90,43);
        rect(0, elem[0], width, elem[1]);
        noFill();*/
+    }
+  }
+  
+  void drawWhiteLines(){
+    fill(255, 255, 255);
+    stroke(1, 1, 1); // dont make it black
+    strokeWeight(1);
+
+
+    // draw white road marks
+    for (int i=1; i<numPoints-2; i++) {
+      int mid = (points[i][0] + points[i][1]) / 2;
+
+      float tx = curveTangent(points[i-1][0], points[i][0], points[i+1][0], points[i+2][0], 0);
+      float ty = curveTangent(points[i-1][2], points[i][2], points[i+1][2], points[i+2][2], 0);
+      float angle = atan2(ty, tx);
+      int blockHeight = 50;
+      int blockWidth = 16;
+
+      angle -= PI/2.0;
+      translate(mid, points[i][2]);
+      rotate(angle);
+      rect(-blockWidth/2, -blockHeight/2, blockWidth, blockHeight, 2);
+      rotate(-angle);
+      translate(-mid, -points[i][2]);
     }
   }
 
