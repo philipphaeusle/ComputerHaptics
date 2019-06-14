@@ -87,7 +87,6 @@ void draw() {
   //println(frameRate);
   // calculate positions
   float pos = getPos();
-  renderForce(0);
   xpos = getNewDraggedValue(xpos, pos, drag);
   ypos = height * 0.6;
 
@@ -109,10 +108,8 @@ void draw() {
 
   // collisions
   int underground=street.detectUndergroundCollision();
-
-  if (underground!=0) {
-    renderUnderground(underground);
-  }
+  
+  renderAllForces(underground);
 
   street.moveDown();
   int i=(int) random(0, 200);
@@ -214,6 +211,7 @@ void keyPressed() {
   println(key);
   if (key=='r') {
     gameOver=false;
+    magnets.clear();
   }
   if (!gameOver) {
     loop();
