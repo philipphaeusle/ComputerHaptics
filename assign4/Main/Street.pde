@@ -189,12 +189,24 @@ class Street {
   }
 
   void generateMagnets(int x, int y, int leftOrRight) {
+    if(leftOrRight==0){
+      if(x-250<=0){
+        println("skipping");
+        return;
+      }
+    }else{
+      if(x+250>=width){
+        println("skipping");
+        return;
+      }
+      
+    }
     int[] temp = new int[4];
     temp[2]=(int) random(-100, 100);
     if (leftOrRight==0) {
-      temp[0]=x-200;
+      temp[0]=x-150;
     } else {
-      temp[0]=x+100;
+      temp[0]=x+150;
     }
     temp[1]=y;
     temp[3]=leftOrRight;
@@ -264,7 +276,7 @@ class Street {
 
       //add magnets
       float temp=random(0, 10);
-      if (random(0, 100)<=100.0) {
+      if (random(0, 100)<=30.0) {
         if (temp<5.0) {
           generateMagnets(points[0][0], points[0][2], 0);
         } else {
