@@ -176,7 +176,7 @@ class Street {
   void generateUnderground(int type) {
 
     int[] temp= new int[3];
-    int h=(int) random(300, undergroundSize);
+    int h = undergroundSize;
     temp[0]=0-h;
     temp[1]=h;
     temp[2]=type;
@@ -289,7 +289,7 @@ class Street {
 
   void cleanUnderground() {
     for (int i=surfaces.size()-1; i>=0; i--) {
-      if (surfaces.get(i)[1] >= height) {
+      if (surfaces.get(i)[0] >= height) {
         surfaces.remove(i);
       }
     }
@@ -297,7 +297,7 @@ class Street {
 
   void cleanMagnets() {
     for (int i=magnets.size()-1; i>=0; i--) {
-      if (magnets.get(i)[1] >= height) {
+      if (magnets.get(i)[1] >= height+height/2) {
         magnets.remove(i);
       }
     }
@@ -350,15 +350,15 @@ class Street {
       //ellipse(elem[0], elem[1],elem[2], elem[2]);
       if (elem[2]>0) {
         if (elem[3]==1) {
-          image(magRedR, elem[0], elem[1]);
+          image(magRedR, elem[0]-(magRedR.width/2), elem[1]-(magRedR.height/2));
         } else {
-          image(magRed, elem[0], elem[1]);
+          image(magRed, elem[0]-(magRed.width/2), elem[1]-(magRed.height/2));
         }
       } else {
         if (elem[3]==1) {
-          image(magBlueR, elem[0], elem[1]);
+          image(magBlueR, elem[0]-(magBlueR.width/2), elem[1]-(magBlueR.height/2));
         } else {
-          image(magBlue, elem[0], elem[1]);
+          image(magBlue, elem[0]-(magBlue.width/2), elem[1]-(magBlue.height/2));
         }
       }
 
