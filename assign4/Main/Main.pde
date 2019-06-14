@@ -32,6 +32,7 @@ int carSize=200;
 boolean gameOver=false;
 int score=0;
 int framesAlready=0;
+int highscore=0;
 
 boolean withSound = false;
 SoundFile policeSound, crashSound;
@@ -52,7 +53,8 @@ void setup() {
   animation2 = new Animation("../ressources/Topdown_vehicle_sprites_pack/Police_animation/", 3, carSize);
   chasedCar = loadImage("../ressources/Topdown_vehicle_sprites_pack/Audi.png");
   chasedCar.resize(0, carSize);
-
+  String[] lines = loadStrings("highscore.txt");
+  highscore = Integer.parseInt(lines[0]);
 
   setUpData();
   setupHapkitControl();
@@ -129,16 +131,27 @@ void draw() {
 
   score=c1-framesAlready-1; //todo: maybe redo;
   textFont(f, 16);                 
-  fill(0); 
+  fill(255); 
   textAlign(CENTER);
-  text("Score: "+score, width/2, 60); 
+  text("Score: "+score, width/2, 60);
+  if(highscore < score){
+    text("Highscore: "+score, width*0.9, 60);
+  }else{
+    text("Highscore: "+highscore, width*0.9, 60);
+  }
 
   if (crashed) {
     stopHapkitInstance();
     gameOver=true;
-    textFont(f, 96);                 
-    fill(0); 
+    PFont font = loadFont("data/Karumbi-96.vlw");
+    textFont(font, 96);                 
     textAlign(CENTER);
+    fill(255);
+    for (int x = -1; x < 2; x++) {
+      text("Game Over!", width/2+x, height/2);
+      text("Game Over!", width/2, height/2+x);
+    }
+    fill(229,21,27); 
     text("Game Over!", width/2, height/2);
     framesAlready=c1;
     noLoop();
@@ -148,6 +161,21 @@ void draw() {
       policeSound.stop();
       crashSound.jump(1);
       crashSound.play();
+    }
+    
+    if(highscore < score){
+      highscore = score;
+      String[] lines = new String[1];
+      lines[0] = Integer.toString(highscore);
+      saveStrings("highscore.txt",lines);
+      textFont(f, 80);
+      fill(255);
+      for (int x = -1; x < 2; x++) {
+        text("New Highscore!", width/2+x, height*0.8);
+        text("New Highscore!", width/2, height*0.8+x);
+       }
+      fill(229,175,0);
+      text("New Highscore!", width/2, height*0.8);
     }
   }
 }
