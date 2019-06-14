@@ -15,6 +15,7 @@ import processing.serial.*;
 Serial myPort;
 
 float hPositionHandle = 0.0;
+float force=0;
 
 //boolean gameIsRunning = false;
 boolean hIsConnected = false;
@@ -69,15 +70,51 @@ void stopHapkitInstance() {
   myPort.write("STOP\n");
 }
 
-void renderUnderground(int type) {
+void calcUnderground(int type) {
   switch(type) {
   case 0:
     break;
   case 1:
-    float force=random(-2, 2);
-    renderForce(force);
+    force+=random(-1, 1);
     break;
   default:
     break;
   }
+}
+
+void calcMagnetForces() {
+  //TODO: smooter 
+  for(int[] magnet : magnets){
+    float distance=sqrt(pow (xpos-magnet[0], 2) + pow (ypos-magnet[1], 2));
+    if(distance>height){
+      continue;
+    }
+    if (magnet[3]==0 && magnet[2]<.0 || magnet[3]==1 && magnet[2]>0.0){
+      //push right
+      float temp=100/distance;
+      if(temp>0){
+        temp*=-1;
+      }
+      force+=temp;
+
+    }else{
+      //push left
+       float temp=100/distance;
+      if(temp<0){
+        temp*=-1;
+      }
+      force+=temp;
+    }
+  }
+}
+
+
+void renderAllForces(int type){
+  //calculate magnet force
+  calcMagnetForces();
+  //calculate underground force
+  calcUnderground(type);
+  //render force and set then to 0
+  renderForce(force);
+  force=0;
 }

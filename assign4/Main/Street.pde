@@ -1,4 +1,5 @@
 int[][][] carPositions=new int[3][2][2]; // left, mid, x eg.
+ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force, lr
 
 class Street {
   int numPoints;
@@ -6,7 +7,7 @@ class Street {
   int [][] points = new int[numPoints][3]; // xL, xR, y
 
   ArrayList<int []> surfaces = new  ArrayList<int []>(); // y,h
-  ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force, lr
+  
 
   int r = 90;
   int r1;
