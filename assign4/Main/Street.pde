@@ -167,7 +167,7 @@ class Street {
         if (get(xy[0], xy[1])==color(0)) {
           return true;
         }
-        ellipse(xy[0], xy[1], 8, 8);
+      //  ellipse(xy[0], xy[1], 8, 8);
       }
     }
     noFill();
@@ -200,9 +200,9 @@ class Street {
         println("skipping");
         return;
       }
-      
+     
     }
-    int[] temp = new int[4];
+    int[] temp = new int[5];
     temp[2]=(int) random(-100, 100);
     if (leftOrRight==0) {
       temp[0]=x-150;
@@ -211,6 +211,7 @@ class Street {
     }
     temp[1]=y;
     temp[3]=leftOrRight;
+    temp[4]=0;
     magnets.add(temp);
   }
 
@@ -277,7 +278,13 @@ class Street {
 
       //add magnets
       float temp=random(0, 10);
-      if (random(0, 100)<=30.0) {
+      int nearesty;
+      if(magnets.size()==0){
+        nearesty=height;
+      }else{
+        nearesty=magnets.get(magnets.size()-1)[1];
+      }
+      if (random(0, 100)<=70.0 && (nearesty-points[0][2]) > height*0.75) {
         if (temp<5.0) {
           generateMagnets(points[0][0], points[0][2], 0);
         } else {
@@ -296,6 +303,7 @@ class Street {
     for (int i=magnets.size()-1; i>=0; i--) {
       int[] temp=magnets.get(i);
       temp[1]+=speed;
+      temp[4]++;
       magnets.set(i, temp);
     }
   }
@@ -378,6 +386,20 @@ class Street {
       //noFill();
     }
   }
+  
+ void drawMagnetForces() {
+   int rMax = height;
+   noFill();
+   strokeWeight(10);
+   stroke(0, 0, 0, 100);
+   for (int[] elem : magnets) {
+     int radius = (elem[4]*13) % rMax;
+     if(elem[2] > 0){
+       radius = rMax - radius;
+     }
+     circle(elem[0], elem[1], radius);
+   }
+ }
 
   int detectUndergroundCollision() {
     for (int[][] temp : carPositions) {

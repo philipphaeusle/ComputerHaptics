@@ -37,8 +37,10 @@ int highscore=0;
 boolean withSound = false;
 SoundFile policeSound, crashSound;
 
+PFont fontGO;
+
 void setup() {
-  size(1200, 700);
+  size(1200, 1000);
   background(255, 204, 204);
   frameRate(60);
   f = createFont("Sans", 16, true); 
@@ -48,7 +50,7 @@ void setup() {
     policeSound = new SoundFile(this, "../ressources/police.mp3");
     crashSound = new SoundFile(this, "../ressources/crash.mp3");
   }
-
+  fontGO = loadFont("data/Karumbi-96.vlw");
   animation1 = new Animation("../ressources/Topdown_vehicle_sprites_pack/ambulance_animation/", 3, carSize);
   animation2 = new Animation("../ressources/Topdown_vehicle_sprites_pack/Police_animation/", 3, carSize);
   chasedCar = loadImage("../ressources/Topdown_vehicle_sprites_pack/Audi.png");
@@ -105,6 +107,7 @@ void draw() {
   street.display();
   street.drawMagnets();
   animation2.display(xpos, ypos);
+  street.drawMagnetForces();
 
   // collisions
   int underground=street.detectUndergroundCollision();
@@ -138,11 +141,11 @@ void draw() {
   }
 
   if (crashed) {
-    stopHapkitInstance();
+    noLoop();
     gameOver=true;
-    PFont font = loadFont("data/Karumbi-96.vlw");
-    textFont(font, 96);                 
+    textFont(fontGO, 96);                 
     textAlign(CENTER);
+    
     fill(255);
     for (int x = -1; x < 2; x++) {
       text("Game Over!", width/2+x, height/2);
@@ -151,7 +154,7 @@ void draw() {
     fill(229,21,27); 
     text("Game Over!", width/2, height/2);
     framesAlready=c1;
-    noLoop();
+    
     setUpData();
 
     if (withSound) {
@@ -174,6 +177,7 @@ void draw() {
       fill(229,175,0);
       text("New Highscore!", width/2, height*0.8);
     }
+    thread("renderCrashed");
   }
 }
 
@@ -208,8 +212,7 @@ void keyPressed() {
   if (withSound) {
     policeSound.loop();
   }
-  println(key);
-  if (key=='r') {
+  if (key=='r' && gameOver==true) {
     gameOver=false;
     magnets.clear();
   }

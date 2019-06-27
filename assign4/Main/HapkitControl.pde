@@ -83,29 +83,40 @@ void calcUnderground(int type) {
 }
 
 void calcMagnetForces() {
+  float distMax=height;
+  float forcemax=2;
   //TODO: smooter 
   for(int[] magnet : magnets){
     float distance=sqrt(pow (xpos-magnet[0], 2) + pow (ypos-magnet[1], 2));
-    if(distance>height){
+    
+    if(distance>distMax){
       continue;
     }
-    if (magnet[3]==0 && magnet[2]<.0 || magnet[3]==1 && magnet[2]>0.0){
+     float k=-forcemax/distMax;
+     float temp=forcemax+distance*k;
+    if (magnet[3]==0 && magnet[2]<0.0 || magnet[3]==1 && magnet[2]>0.0){
       //push right
-      float temp=100/distance;
-      if(temp>0){
-        temp*=-1;
-      }
-      force+=temp;
-
-    }else{
-      //push left
-       float temp=100/distance;
-      if(temp<0){
-        temp*=-1;
-      }
-      force+=temp;
+       temp*=-1;
     }
+    force+=temp;
   }
+}
+
+void renderCrashed(){
+  force=0;
+  int d=20;
+  int f=15;
+  for (int i=0; i<6;i++){
+    if(i%2==1){
+      renderForce(f);
+    }else{
+      renderForce(-f);
+    }
+    
+    delay(d);
+  }
+  renderForce(0);
+  stopHapkitInstance();
 }
 
 
