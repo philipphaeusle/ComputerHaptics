@@ -106,8 +106,8 @@ void calcMagnetForces() {
 
 void renderCrashed(){
   force=0;
-  int d=30;
-  int f=10;
+  int d=40;
+  int f=5;
   for (int i=0; i<10;i++){
     if(i%2==1){
       renderForce(f);

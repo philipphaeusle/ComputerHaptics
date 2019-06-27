@@ -25,6 +25,7 @@ class Street {
 
   PImage magBlueR = loadImage("../ressources/magnet_blue_right.png");
   PImage magRedR = loadImage("../ressources/magnet_red_right.png");
+  PImage explosion = loadImage("../ressources/explosion.png");
 
   /* PImage magBlue_mirror=
    PImage magRed_mirror=*/
@@ -39,7 +40,9 @@ class Street {
 
     imgSurfaceStones.resize((int) (width*1.2), undergroundSize);
     imgSurfaceIce.resize((int) (width*1.2), undergroundSize);
-
+    
+   explosion.resize(100, 100);
+ 
     magBlue.resize(100, 100);
     magRed.resize(100, 100);
 
@@ -167,6 +170,7 @@ class Street {
     for (int[][] temp : carPositions) {
       for (int[] xy : temp) {
         if (get(xy[0], xy[1])==color(0)) {
+          image(explosion,xy[0]-explosion.width/2,xy[1]-explosion.height/2);
           return true;
         }
       //  ellipse(xy[0], xy[1], 8, 8);
@@ -194,7 +198,6 @@ class Street {
   void generateMagnets(int x, int y, int leftOrRight) {
     if(leftOrRight==0){
       if(x-250<=0){
-        println("skipping");
         return;
       }
     }else{

@@ -115,7 +115,7 @@ void draw() {
   renderAllForces(underground);
 
   if (underground==2) {
-    drag=150.0;
+    drag=120.0;
   } else {
     drag=30.0;
   }
@@ -150,7 +150,7 @@ void draw() {
     thread("renderCrashed");
     noLoop();
     gameOver=true;
-    textFont(fontGO, 96);                 
+    textFont(fontGO, 150);                 
     textAlign(CENTER);
 
     fill(255);
@@ -161,8 +161,6 @@ void draw() {
     fill(229, 21, 27); 
     text("Game Over!", width/2, height/2);
     framesAlready=c1;
-
-    setUpData();
 
     if (withSound) {
       policeSound.stop();
@@ -219,6 +217,7 @@ void keyPressed() {
     policeSound.loop();
   }
   if (key=='r' && gameOver==true) {
+    setUpData();
     gameOver=false;
     magnets.clear();
   }
