@@ -72,10 +72,12 @@ void stopHapkitInstance() {
 
 void calcUnderground(int type) {
   switch(type) {
-  case 0:
+  case 0: //street
     break;
-  case 1:
+  case 1: //schotter
     force+=random(-1, 1);
+    break;
+  case 2: //eis
     break;
   default:
     break;
@@ -84,7 +86,7 @@ void calcUnderground(int type) {
 
 void calcMagnetForces() {
   float distMax=height;
-  float forcemax=2;
+  float forcemax=1.2;
   //TODO: smooter 
   for(int[] magnet : magnets){
     float distance=sqrt(pow (xpos-magnet[0], 2) + pow (ypos-magnet[1], 2));
@@ -104,9 +106,9 @@ void calcMagnetForces() {
 
 void renderCrashed(){
   force=0;
-  int d=20;
-  int f=15;
-  for (int i=0; i<6;i++){
+  int d=30;
+  int f=10;
+  for (int i=0; i<10;i++){
     if(i%2==1){
       renderForce(f);
     }else{

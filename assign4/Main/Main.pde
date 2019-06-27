@@ -34,6 +34,7 @@ int score=0;
 int framesAlready=0;
 int highscore=0;
 
+
 boolean withSound = false;
 SoundFile policeSound, crashSound;
 
@@ -89,7 +90,8 @@ void draw() {
   //println(frameRate);
   // calculate positions
   float pos = getPos();
-  xpos = getNewDraggedValue(xpos, pos, drag);
+  float lastXpos=xpos;
+  xpos = getNewDraggedValue(lastXpos, pos, drag);
   ypos = height * 0.6;
 
   float newCarAngle = (pos-xpos) * 0.01;
@@ -99,7 +101,6 @@ void draw() {
   mainCarAngle = getNewDraggedValue(mainCarAngle, newCarAngle, mainCarAngleDrag);
 
   street.setCarPositions(xpos, ypos, carSize, animation1);
-
   // draw stuff
   background(128, 128, 128);
   street.drawWhiteLines();
@@ -111,13 +112,18 @@ void draw() {
 
   // collisions
   int underground=street.detectUndergroundCollision();
-  
   renderAllForces(underground);
 
+  if (underground==2) {
+    drag=150.0;
+  } else {
+    drag=30.0;
+  }
+
   street.moveDown();
-  int i=(int) random(0, 200);
-  if (i<1) {
-    street.generateUnderground(1);
+  int i=(int) random(1, 400);
+  if (i<3) {
+    street.generateUnderground(i);
   }
   street.cleanUnderground();
   street.cleanMagnets();
@@ -134,27 +140,28 @@ void draw() {
   fill(255); 
   textAlign(CENTER);
   text("Score: "+score, width/2, 60);
-  if(highscore < score){
+  if (highscore < score) {
     text("Highscore: "+score, width*0.9, 60);
-  }else{
+  } else {
     text("Highscore: "+highscore, width*0.9, 60);
   }
 
   if (crashed) {
+    thread("renderCrashed");
     noLoop();
     gameOver=true;
     textFont(fontGO, 96);                 
     textAlign(CENTER);
-    
+
     fill(255);
     for (int x = -1; x < 2; x++) {
       text("Game Over!", width/2+x, height/2);
       text("Game Over!", width/2, height/2+x);
     }
-    fill(229,21,27); 
+    fill(229, 21, 27); 
     text("Game Over!", width/2, height/2);
     framesAlready=c1;
-    
+
     setUpData();
 
     if (withSound) {
@@ -162,22 +169,21 @@ void draw() {
       crashSound.jump(1);
       crashSound.play();
     }
-    
-    if(highscore < score){
+
+    if (highscore < score) {
       highscore = score;
       String[] lines = new String[1];
       lines[0] = Integer.toString(highscore);
-      saveStrings("highscore.txt",lines);
+      saveStrings("highscore.txt", lines);
       textFont(f, 80);
       fill(255);
       for (int x = -1; x < 2; x++) {
         text("New Highscore!", width/2+x, height*0.8);
         text("New Highscore!", width/2, height*0.8+x);
-       }
-      fill(229,175,0);
+      }
+      fill(229, 175, 0);
       text("New Highscore!", width/2, height*0.8);
     }
-    thread("renderCrashed");
   }
 }
 

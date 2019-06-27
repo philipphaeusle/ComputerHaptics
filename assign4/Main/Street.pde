@@ -1,12 +1,12 @@
 int[][][] carPositions=new int[3][2][2]; // left, mid, x eg.
-ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force, lr
+ArrayList<int []> magnets = new  ArrayList<int []>(); // x,y,force, lr, radius
 
 class Street {
   int numPoints;
   int diff; 
   int [][] points = new int[numPoints][3]; // xL, xR, y
 
-  ArrayList<int []> surfaces = new  ArrayList<int []>(); // y,h
+  ArrayList<int []> surfaces = new  ArrayList<int []>(); // y,h,type
   
 
   int r = 90;
@@ -18,6 +18,7 @@ class Street {
 
   int undergroundSize=450;
   PImage imgSurfaceStones = loadImage("../ressources/rocks_2.png");
+  PImage imgSurfaceIce = loadImage("../ressources/ice.png");
 
   PImage magBlue = loadImage("../ressources/magnet_blue.png");
   PImage magRed = loadImage("../ressources/magnet_red.png");
@@ -36,7 +37,8 @@ class Street {
     this.points=points;
     this.numPoints=numPoints;
 
-    imgSurfaceStones.resize(width, undergroundSize);
+    imgSurfaceStones.resize((int) (width*1.2), undergroundSize);
+    imgSurfaceIce.resize((int) (width*1.2), undergroundSize);
 
     magBlue.resize(100, 100);
     magRed.resize(100, 100);
@@ -197,7 +199,7 @@ class Street {
       }
     }else{
       if(x+250>=width){
-        println("skipping");
+        //println("skipping");
         return;
       }
      
@@ -326,11 +328,12 @@ class Street {
 
   void drawSurfaces() {
     for (int[] elem : surfaces) {
-      //TODO: switch surface textures
-      image(imgSurfaceStones, 0, elem[0]);
-      /*fill(139,90,43);
-       rect(0, elem[0], width, elem[1]);
-       noFill();*/
+      if(elem[2]==1){
+         image(imgSurfaceStones, -50, elem[0]);
+      }else{
+        //todo change to image 
+        image(imgSurfaceIce, -50, elem[0]);
+      }
     }
   }
   
@@ -391,7 +394,7 @@ class Street {
    int rMax = height;
    noFill();
    strokeWeight(10);
-   stroke(0, 0, 0, 100);
+   stroke(0, 0, 0, 50);
    for (int[] elem : magnets) {
      int radius = (elem[4]*13) % rMax;
      if(elem[2] > 0){
